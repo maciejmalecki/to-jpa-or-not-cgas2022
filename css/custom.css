@@ -1,0 +1,73 @@
+/*
+ * Image sizes.
+ */
+.reveal img {
+    max-height: calc(50vh);
+    max-width: calc(50vw);
+}
+
+/*
+ * Flex
+ */
+ .reveal .gap-1 {
+    gap: 1em;
+}
+.reveal .gap-2 {
+     gap: 2em;
+ }
+
+.reveal section.hide-ticks ul {
+    list-style-type: none;
+}
+
+/*
+ * Colors.
+ */
+.reveal .white {
+    color: #ffffff;
+}
+.reveal .cyan {
+    color: #55FFFF;
+}
+.reveal .pink {
+    color: #ff55ff;
+}
+.reveal .rainbow ul li:nth-child(3n + 1) {
+    color: #ffffff;
+}
+.reveal .rainbow ul li:nth-child(3n + 2) {
+    color: #55FFFF;
+}
+.reveal .rainbow ul li:nth-child(3n + 3) {
+    color: #ff55ff;
+}
+
+/*
+ * Image source "on hover" handling.
+ */
+ .source p, .source ol {
+    display: none;
+    position: absolute;
+    background-color: black;
+    bottom: 0;
+    width: 100%;
+    font-size: small;
+    box-shadow: 5px 5px 8px navy;
+    padding: 0.5em;
+}
+.source ol {
+    padding-left: 20px;
+}
+.source {
+    font-size: small;
+    text-align: left;
+    padding: 0.5em;
+    display: table;
+}
+.source::after {
+    cursor: pointer;
+    content: "\1f6c8  IMG source";
+}
+.source:hover p, .source:hover ol {
+    display: block;
+}

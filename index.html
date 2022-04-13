@@ -4,11 +4,12 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>To JPA or not - revisited</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
+		<link rel="stylesheet" href="css/custom.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -16,8 +17,93 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section data-markdown data-separator-vertical="^--$">
+					<textarea data-template>
+						# to JPA or not
+						#### difficulties with data persistence in hexagonal reality<!-- .element: class="pink"-->
+
+						Maciej Małecki, 2022<!-- .element: class="cyan"-->
+						---
+						### why this presentation?
+
+						![Hexagonal](img/hexagonal.png)
+						--
+						<!-- .slide: class="rainbow"-->
+						* ORM (JPA) has several drawbacks (N+1)
+						* surprisingly hard to apply hexagonal architecture
+						* a lot of unnecessary data mappings
+						* maybe there are some lightweight alternatives that suit better (SQL mappers)
+						* ... JPA is not that bad<!-- .element: class="fragment"-->
+						* (sometimes)<!-- .element: class="fragment"-->
+						--
+						<!-- .slide: class="rainbow hide-ticks"-->
+						### maybe...
+
+						* ...there are no silver bullets in IT?
+						* ...we can identify when each technique can be applied?<!-- .element: class="fragment"-->
+						* ...maybe we can combine different techniques in single project?<!-- .element: class="fragment"-->
+						---
+						# to JPA or not
+						### (revisited)
+						#### a rant on persistence techniques in hexagonal architecture<!-- .element: class="pink"-->
+					</textarea>
+				</section>
+				<section class="rainbow">
+					<h3>who am I?</h3>
+					<div class="r-hstack gap-1">
+						<img src="img/mm.jpg" alt="mm">
+						<ul>
+							<li>coder since 1990 (BASIC & 6502 Assembly)</li>
+							<li>professional dev since 2001</li>
+							<li>arch since 2005</li>
+						</ul>
+					</div>
+				</section>
+				<section data-markdown data-separator-vertical="^--$">
+					<textarea data-template>
+						### over 20 yrs of experience in software architecture
+
+						![layers](img/layers.png)
+						---
+						<!-- .slide: class="rainbow"-->
+						### history: relational data bases
+
+						* proposed by Codd in 1970
+						* backed with solid math theory
+						* solves most of the problems with earlier DB models
+						* universal solution widely applicable
+						* first Oracle implementation 1979
+						* became modelling standard in 80ties and 90ties
+						--
+						<!-- .slide: class="rainbow"-->
+						#### history: object oriented paradigm
+
+						* first language: Simula, 60ties
+						* Smalltalk 1970
+						* mid 80ties: Objective C, C++
+						* gets crazy: Pascal, ADA, BASIC, COBOL
+						* 90ties - OOP became a dominant programming paradigm
+						--
+						# FACT
+						## OOP and RD does not fit
+						--
+						## Object databases
+
+						the concept not accepted by market and IT industry
+
+						why?
+
+						* clients already had Oracle
+						* object databases were bound to the language
+						--
+						* there is no association concept in RD
+						* no object relations
+						* no inheritance
+						* RD stores plain data, no behavior
+						--
+						We started to fool ourselves with something called object-relational mapping.
+					</textarea>
+				</section>
 			</div>
 		</div>
 
@@ -31,7 +117,8 @@
 			// - https://revealjs.com/config/
 			Reveal.initialize({
 				hash: true,
-
+				slideNumber: "c/t",
+				width: 1050,
 				// Learn about plugins: https://revealjs.com/plugins/
 				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
 			});
