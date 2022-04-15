@@ -29,7 +29,7 @@
 						![Hexagonal](img/hexagonal.png)
 						--
 						<!-- .slide: class="rainbow"-->
-						* ORM (JPA) has several drawbacks (N+1)
+						* ORM (JPA) has several drawbacks (`$N+1$`)
 						* surprisingly hard to apply hexagonal architecture
 						* a lot of unnecessary data mappings
 						* maybe there are some lightweight alternatives that suit better (SQL mappers)
@@ -102,6 +102,65 @@
 						* RD stores plain data, no behavior
 						--
 						We started to fool ourselves with something called object-relational mapping.
+						---
+						### How I did OO persistence in 2001?
+						```java[]
+						public abstract class AbstractEntity {
+							public Long id;
+
+							protected abstract void populateSelf(ResultSet rs);
+							protected abstract void loadSelf(Connection conn, long id);
+							protected void loadRelated
+								(Connection conn, long id, boolean withRelated) {};
+							public load(Connection conn, long id) {
+								loadSelf(conn, id);
+								if (withRelated) {
+									loadRelated(conn, id);
+								}
+							}
+							public write(Connection conn) {};
+							public delete(Connection conn) {};
+						}
+						```
+						--
+						### OrderLine entity
+						```java[|9-20|21-34]
+						public class OrderLineEntity extends AbstractEntity{
+							public String product;
+							public BigDecimal price;
+
+							protected void populateSelf(ResultSet rs) {
+								product = rs.getString("PRODUCT");
+								price = rs.getBigDecimal("PRICE", 2);
+							}
+							protected void loadSelf(Connection conn, long id) {
+								ps = conn.prepareStatement(
+									"SELECT ID, PRODUCT, PRICE FROM LINES WHERE ID=?");
+								ps.setLong(1, id);
+								rs = ps.executeQuery();
+								if (rs.next()) {
+									populateSelf(rs);
+								} else {
+									throw new EntityNotFoundException(...);
+								}
+								// forgot to close ps and rs
+							}
+							public List loadAllForOrder(Connection conn, long orderId) {
+								ps = conn.prepareStatement(
+									"SELECT ID, PRODUCT, PRICE FROM LINES WHERE ORDER_ID=?");
+								ps.setLong(1, orderId);
+								rs = ps.executeQuery();
+								result = new ArrayList();
+								while (rs.next()) {
+									ol = new OrderLine();
+									ol.populateSelf(rs);
+									result.add(ol);
+								}
+								return result;
+								// again, forgot to close ps, rs
+							}
+						}
+						```
 					</textarea>
 				</section>
 			</div>
@@ -111,6 +170,7 @@
 		<script src="plugin/notes/notes.js"></script>
 		<script src="plugin/markdown/markdown.js"></script>
 		<script src="plugin/highlight/highlight.js"></script>
+        <script src="plugin/math/math.js"></script>
 		<script>
 			// More info about initialization & config:
 			// - https://revealjs.com/initialization/
@@ -120,7 +180,7 @@
 				slideNumber: "c/t",
 				width: 1050,
 				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX ]
 			});
 		</script>
 	</body>
