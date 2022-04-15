@@ -29,7 +29,7 @@
 						![Hexagonal](img/hexagonal.png)
 						--
 						<!-- .slide: class="rainbow"-->
-						* ORM (JPA) has several drawbacks (`$N+1$`)
+						* ORM (JPA) has several drawbacks ($N+1$)
 						* surprisingly hard to apply hexagonal architecture
 						* a lot of unnecessary data mappings
 						* maybe there are some lightweight alternatives that suit better (SQL mappers)
@@ -103,7 +103,12 @@
 						--
 						We started to fool ourselves with something called object-relational mapping.
 						---
-						### How I did OO persistence in 2001?
+						## How did I do object persistence in 2001?<!-- .element class="pink"-->
+						--
+ 						### Menti
+
+						What do you need in order to implement SQL based persistence in Java completely from scratch?
+						--
 						```java[]
 						public abstract class AbstractEntity {
 							public Long id;
@@ -124,12 +129,13 @@
 						```
 						--
 						### OrderLine entity
-						```java[|9-20|21-34]
+						```java[|10-21|22-35]
 						public class OrderLineEntity extends AbstractEntity{
 							public String product;
 							public BigDecimal price;
 
 							protected void populateSelf(ResultSet rs) {
+								id = rs.getLong("ID");
 								product = rs.getString("PRODUCT");
 								price = rs.getBigDecimal("PRICE", 2);
 							}
@@ -160,6 +166,59 @@
 								// again, forgot to close ps, rs
 							}
 						}
+						```
+						--
+						### Order entity
+						```java[|12-24|25-40|33-36|35]
+						public class OrderEntity extends AbstractEntity {
+							public Date creationDate;
+							public Date expirationDate;
+							public String customer;
+
+							protected void populateSelf(ResultSet rs) {
+								id = rs.getLong("ID");
+								creationDate = rs.getDate("CREATED");
+								expirationDate = rs.getDate("EXPIRE_AT");
+								customer = rs.getString("CUSTOMER");
+							}
+							protected void loadSelf(Connection conn, long id) {
+								ps = conn.prepareStatement(
+									"SELECT ID, CREATED, EXPIRE_AT, CUSTOMER FROM ORDERS " +
+									"WHERE ID=?");
+								ps.setLong(1, id);
+								rs = ps.executeQuery();
+								if (rs.next()) {
+									populateSelf(rs);
+								} else {
+									throw new EntityNotFoundException(...);
+								}
+								// forgot to close ps and rs
+							}
+							public List loadAllForCustomer(Connection conn, String customer) {
+								ps = conn.prepareStatement(
+									"SELECT ID, CREATED, EXPIRE_AT, CUSTOMER FROM ORDERS " +
+									"WHERE CUSTOMER=?");
+								ps.setString(1, customer);
+								rs = ps.executeQuery();
+								result = new ArrayList();
+								while (rs.next()) {
+									ol = new Order();
+									ol.populateSelf(rs);
+									ol.loadRelated(conn); // &lt;-- !!!!
+									result.add(ol);
+								}
+								return result;
+								// again, forgot to close ps, rs
+							}
+						}
+						```
+
+						$N+1$ reads, like in 2022 with JPA<!-- .element class="fragment cyan"-->
+						---
+						## What is the problem with ORM?
+						--
+						### Leaking abstraction
+						```java[]
 						```
 					</textarea>
 				</section>
