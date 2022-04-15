@@ -218,8 +218,57 @@
 						## What is the problem with ORM?
 						--
 						### Leaking abstraction
-						```java[]
+						```java[|1-2|4-5|10]
+						@Entity
+						@Table(name = "ORDERS")
+						public class Order {
+							@Id
+							@Generated
+							Long id;
+
+							String customer;
+
+							@OneToMany(mappedBy="order")
+							Set<OrderLine> orderLines;
+						}
 						```
+
+						Explicit dependency on javax.persistence<!-- .element class="fragment pink"-->
+						--
+						### Leaking abstraction
+						```java[|6]
+						orders = entityManager
+							.createQuery("from Order", Order.class)
+							.getResultList();
+
+						return orders.stream()
+							.map(order -> order.orderLines.price)
+							.collect(
+								Collectors.reducing(
+									BigDecimal.ZERO,
+									(left, right) -> left.add(right)));
+						```
+
+						"$N+1$ reads" problem<!-- .element class="fragment cyan"-->
+
+						`fetch join`<!-- .element class="fragment"-->
+
+						Yes, but this is supposed to be an abstraction, right?<!-- .element class="fragment pink"-->
+						--
+						### Leaking abstraction
+						```java[|5]
+						public List<Product> getAllProductsForOrder(Order order) {
+							List<Product> result = new ArrayList<>();
+							order.orderLines.forEach(line -> {
+								Product p = new Product();
+								line.product = p.productId;
+								result.add(p);
+							});
+							return result;
+						}
+						```
+
+						All product values in ORDER_LINES table are empty now!<!-- .element class="fragment cyan"-->
 					</textarea>
 				</section>
 			</div>
