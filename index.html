@@ -411,6 +411,26 @@
 
 						data class ItemSearchCriteria(val name: String?, val code: String?)
 						```
+						---
+						<!-- .slide: class="rainbow"-->
+						### shared vs separate models
+						---
+						## safe JPA
+						(by Vlad Mihalcea)
+						<!-- .slide: class="rainbow"-->
+						![Vlad](img/vlad.jpg)
+
+						* use eager fetches only
+						* use keys instead of lazy assocs
+						* define your persistent entities boundaries
+						--
+						## consider using CQRS
+						* constructor expressions for reads, entities for writes
+						* use projections (CE) anytime you need to span across multiple aggregates
+						---
+						## Data persistence heuristics
+
+						![Heuristics](img/heuristics.png)
 					</textarea>
 				</section>
 			</div>
