@@ -19,36 +19,13 @@
 			<div class="slides">
 				<section data-markdown data-separator-vertical="^--$">
 					<textarea data-template>
-						# to JPA or not
-						#### difficulties with data persistence in hexagonal reality<!-- .element: class="pink"-->
+						# to JPA or not to JPA
+						#### a rant on persistence techniques in hexagonal architecture<!-- .element: class="pink"-->
 
 						Maciej Małecki, 2022<!-- .element: class="cyan"-->
 						---
 						## Menti
 						### What do you expect from this session?
-						---
-						### why this presentation?
-
-						![Hexagonal](img/hexagonal.png)
-						--
-						<!-- .slide: class="rainbow"-->
-						* ORM (JPA) has several drawbacks ($N+1$)
-						* surprisingly hard to apply hexagonal architecture
-						* a lot of unnecessary data mappings
-						* maybe there are some lightweight alternatives that suit better (SQL mappers)
-						* ... JPA is not that bad<!-- .element: class="fragment"-->
-						* (sometimes)<!-- .element: class="fragment"-->
-						--
-						<!-- .slide: class="rainbow hide-ticks"-->
-						### maybe...
-
-						* ...there are no silver bullets in IT?
-						* ...we can identify when each technique can be applied?<!-- .element: class="fragment"-->
-						* ...maybe we can combine different techniques in single project?<!-- .element: class="fragment"-->
-						---
-						# to JPA or not
-						### (revisited)
-						#### a rant on persistence techniques in hexagonal architecture<!-- .element: class="pink"-->
 					</textarea>
 				</section>
 				<section class="rainbow">
@@ -68,8 +45,27 @@
 
 						![layers](img/layers.png)
 						---
+						### why this presentation?
+
+						![Hexagonal](img/hexagonal.png)
+						--
 						<!-- .slide: class="rainbow"-->
-						### history: relational data bases
+						* ORM (JPA) has several drawbacks (i.e. $N+1$)
+						* surprisingly hard to apply hexagonal architecture
+						* a lot of unnecessary data mappings
+						* maybe there are some lightweight alternatives that suit better (SQL mappers)
+						--
+						## JPA is not that bad (sometimes)
+						--
+						<!-- .slide: class="rainbow hide-ticks"-->
+						## maybe...
+
+						* ...there are no silver bullets?
+						* ...when to use what<!-- .element: class="fragment"-->
+						* ...combine<!-- .element: class="fragment"-->
+						---
+						## history
+						### relational data bases
 
 						* proposed by Codd in 1970
 						* backed with solid math theory
@@ -78,14 +74,14 @@
 						* first Oracle implementation 1979
 						* became modelling standard in 80ties and 90ties
 						--
-						<!-- .slide: class="rainbow"-->
-						#### history: object oriented paradigm
+						## history
+						### object oriented paradigm
 
 						* first language: Simula, 60ties
 						* Smalltalk 1970
 						* mid 80ties: Objective C, C++
-						* gets crazy: Pascal, ADA, BASIC, COBOL
-						* 90ties - OOP became a dominant programming paradigm
+						* Pascal, ADA, BASIC, COBOL<!-- .element: class="fragment"-->
+						* 90ties - OOP became a dominant programming paradigm<!-- .element: class="fragment"-->
 						--
 						# FACT
 						## OOP and RD does not fit
@@ -105,6 +101,17 @@
 						* RD stores plain data, no behavior
 						--
 						We started to fool ourselves with something called object-relational mapping.
+
+						![orm](img/orm.png)
+						--
+						#### Object relational impedance mismatch
+
+						![Ted](img/contrast.jpeg)
+
+						Source: <!-- .element: class="small"-->
+						http://www.newardassociates.com <!-- .element: class="small"-->
+
+						http://blogs.tedneward.com/post/the-vietnam-of-computer-science
 						---
 						## Menti
 						#### What persistence mechanisms do you use?
@@ -434,7 +441,7 @@
 						* constructor expressions for reads, entities for writes
 						* use projections (CE) anytime you need to span across multiple aggregates
 						---
-						## Data persistence heuristics
+						### Data persistence heuristics
 
 						![Heuristics](img/heuristics.png)
 					</textarea>

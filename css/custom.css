@@ -42,10 +42,14 @@
     color: #ff55ff;
 }
 
+.reveal .small {
+    font-size: 0.6em;
+}
+
 /*
  * Image source "on hover" handling.
  */
- .source p, .source ol {
+ .source p, .source ol, .source a {
     display: none;
     position: absolute;
     background-color: black;
