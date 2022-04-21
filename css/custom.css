@@ -49,7 +49,7 @@
 /*
  * Image source "on hover" handling.
  */
- .source p, .source ol, .source a {
+ .source p, .source ol {
     display: none;
     position: absolute;
     background-color: black;
