@@ -142,6 +142,50 @@
 
 						<div class="source"><p>&copy; www.newardassociates.com (<a href="http://www.newardassociates.com">link</a>)</p></div>
 
+						--
+
+						* Object to table mapping problem (i.e. inheritance, associations)
+						* The schema-ownership problem (DBA vs DEV)
+						* The dual-schema problem
+						* The data retrieval mechanism concern (HQL/JPQL/Query DSL/blah blah)
+						* The partial-object problem and load-time paradox ($N+1$)
+						* Entity identity issues
+						* Implicit updates<!-- .element: class="pink fragment"-->
+
+						--
+
+						#### Entity identity issues
+
+						```java[|3-5|7-9|11-13|18-20|24-26]
+						@Entity
+						public class Customer {
+							@Id
+							@Generated
+							Long id;
+
+							public boolean equals(Object other) {
+								return this.id == (Customer) other.id; // id == null???
+							}
+
+							public int hashCode() {
+								return id.hashCode(); // id == null???
+							}
+						}
+
+						...
+
+						customer = new Customer();
+						customerSet.add(customer);
+						entityManager.persist(customer);
+
+						...
+
+						public int hashCode() {
+							return 1;
+						}
+
+						```
+
 						---
 
 						### why this presentation?
