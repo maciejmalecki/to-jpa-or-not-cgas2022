@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>To JPA or not - revisited</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
+		<link rel="stylesheet" href="css/custom.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-markdown data-separator-vertical="^--$">
+					<script type="text/template">
+						# backup
+
+						---
+
+						## How did I do object persistence in 2001?<!-- .element class="pink"-->
+
+						--
+
+						```java[]
+						public abstract class AbstractEntity {
+							public Long id;
+
+							protected abstract void populateSelf(ResultSet rs);
+							protected abstract void loadSelf(Connection conn, long id);
+							protected void loadRelated
+								(Connection conn, long id, boolean withRelated) {};
+							public load(Connection conn, long id) {
+								loadSelf(conn, id);
+								if (withRelated) {
+									loadRelated(conn, id);
+								}
+							}
+							public write(Connection conn) {};
+							public delete(Connection conn) {};
+						}
+						```
+
+						--
+
+						### OrderLine entity
+						```java[|10-21|22-35]
+						public class OrderLineEntity extends AbstractEntity{
+							public String product;
+							public BigDecimal price;
+
+							protected void populateSelf(ResultSet rs) {
+								id = rs.getLong("ID");
+								product = rs.getString("PRODUCT");
+								price = rs.getBigDecimal("PRICE", 2);
+							}
+							protected void loadSelf(Connection conn, long id) {
+								ps = conn.prepareStatement(
+									"SELECT ID, PRODUCT, PRICE FROM LINES WHERE ID=?");
+								ps.setLong(1, id);
+								rs = ps.executeQuery();
+								if (rs.next()) {
+									populateSelf(rs);
+								} else {
+									throw new EntityNotFoundException(...);
+								}
+								// forgot to close ps and rs
+							}
+							public List loadAllForOrder(Connection conn, long orderId) {
+								ps = conn.prepareStatement(
+									"SELECT ID, PRODUCT, PRICE FROM LINES WHERE ORDER_ID=?");
+								ps.setLong(1, orderId);
+								rs = ps.executeQuery();
+								result = new ArrayList();
+								while (rs.next()) {
+									ol = new OrderLine();
+									ol.populateSelf(rs);
+									result.add(ol);
+								}
+								return result;
+								// again, forgot to close ps, rs
+							}
+						}
+						```
+
+						--
+
+						### Order entity
+						```java[|12-24|25-40|33-36|35]
+						public class OrderEntity extends AbstractEntity {
+							public Date creationDate;
+							public Date expirationDate;
+							public String customer;
+
+							protected void populateSelf(ResultSet rs) {
+								id = rs.getLong("ID");
+								creationDate = rs.getDate("CREATED");
+								expirationDate = rs.getDate("EXPIRE_AT");
+								customer = rs.getString("CUSTOMER");
+							}
+							protected void loadSelf(Connection conn, long id) {
+								ps = conn.prepareStatement(
+									"SELECT ID, CREATED, EXPIRE_AT, CUSTOMER FROM ORDERS " +
+									"WHERE ID=?");
+								ps.setLong(1, id);
+								rs = ps.executeQuery();
+								if (rs.next()) {
+									populateSelf(rs);
+								} else {
+									throw new EntityNotFoundException(...);
+								}
+								// forgot to close ps and rs
+							}
+							public List loadAllForCustomer(Connection conn, String customer) {
+								ps = conn.prepareStatement(
+									"SELECT ID, CREATED, EXPIRE_AT, CUSTOMER FROM ORDERS " +
+									"WHERE CUSTOMER=?");
+								ps.setString(1, customer);
+								rs = ps.executeQuery();
+								result = new ArrayList();
+								while (rs.next()) {
+									ol = new Order();
+									ol.populateSelf(rs);
+									ol.loadRelated(conn); // <-- !!!!
+									result.add(ol);
+								}
+								return result;
+								// again, forgot to close ps, rs
+							}
+						}
+						```
+
+						$N+1$ reads, like in 2022 with JPA<!-- .element class="fragment cyan"-->
+
+						---
+
+						## What is the problem with ORM?
+
+						--
+
+						### Leaking abstraction
+						```java[|1-2|4-5|10]
+						@Entity
+						@Table(name = "ORDERS")
+						public class Order {
+							@Id
+							@Generated
+							Long id;
+
+							String customer;
+
+							@OneToMany(mappedBy="order")
+							Set<OrderLine> orderLines;
+						}
+						```
+
+						Explicit dependency on javax.persistence<!-- .element class="fragment pink"-->
+
+						--
+
+						### Leaking abstraction
+						```java[|6]
+						orders = entityManager
+							.createQuery("from Order", Order.class)
+							.getResultList();
+
+						return orders.stream()
+							.map(order -> order.orderLines.price)
+							.collect(
+								Collectors.reducing(
+									BigDecimal.ZERO,
+									(left, right) -> left.add(right)));
+						```
+
+						"$N+1$ reads" problem<!-- .element class="fragment cyan"-->
+
+						`fetch join`<!-- .element class="fragment"-->
+
+						Yes, but this is supposed to be an abstraction, right?<!-- .element class="fragment pink"-->
+
+						--
+
+						### Leaking abstraction
+						```java[|5]
+						public List<Product> getAllProductsForOrder(Order order) {
+							List<Product> result = new ArrayList<>();
+							order.orderLines.forEach(line -> {
+								Product p = new Product();
+								line.product = p.productId;
+								result.add(p);
+							});
+							return result;
+						}
+						```
+
+						All product values in ORDER_LINES table are empty now!<!-- .element class="fragment cyan"-->
+					</script>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+        <script src="plugin/math/math.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+				slideNumber: "c/t",
+				width: 1050,
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+			});
+		</script>
+	</body>
+</html>

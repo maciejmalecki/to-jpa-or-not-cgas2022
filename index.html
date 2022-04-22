@@ -38,7 +38,7 @@
 							</ul>
 						</div>
 
-						---
+						--
 
 						### Mentimeter #1
 
@@ -80,7 +80,7 @@
 
 						## how do you choose an architecture for a new project?<!-- .element: class="cyan"-->
 
-						---
+						--
 
 						<!-- .slide: class="rainbow"-->
 
@@ -194,33 +194,6 @@
 						![orm](img/orm.png)
 
 						ORM is a leaking abstraction and underlying persistence mechanism cannot be ignored<!-- .element: class="cyan fragment"-->
-
-						---
-
-						### the cure
-
-						![Hexagonal](img/hexagonal.png)
-
-						--
-
-						<!-- .slide: class="rainbow"-->
-						* ORM (JPA) has several drawbacks (i.e. $N+1$)
-						* surprisingly hard to apply hexagonal architecture
-						* a lot of unnecessary data mappings
-						* maybe there are some lightweight alternatives that suit better (SQL mappers)
-
-						--
-
-						## JPA is not that bad (sometimes)
-
-						--
-
-						<!-- .slide: class="rainbow hide-ticks"-->
-						## maybe...
-
-						* ...there are no silver bullets?
-						* ...when to use what<!-- .element: class="fragment"-->
-						* ...combine<!-- .element: class="fragment"-->
 
 						---
 
@@ -363,6 +336,9 @@
 						--
 
 						### JDBI: templates
+
+						Kotlin &hearts;
+
 						```kotlin[|8-13|19|20-21|22-23|26]
 						@SqlQuery("""
 							SELECT
@@ -394,8 +370,48 @@
 
 						---
 
-						<!-- .slide: class="rainbow"-->
 						### shared vs separate models
+
+						when does it make sense to separate models?
+
+						Infrastructure:
+						```java
+						public interface SystemConfig {
+							String getProperty(String key)
+						}
+						```
+
+						Port (Domain):
+						```java
+						public interface DomainConfig {
+							boolean isDemo();
+							SystemType getSystemType();
+						}
+						```
+
+						<div class="fragment">&#128077;</div>
+
+						--
+
+						### when doesn't?
+
+						Infrastructure:
+						```java
+						public interface OrderJPARepository extends CrudRepository<OrderEntity, Long> {
+							Optional<OrderEntity> findById(Long id);
+							OrderEntity save(OrderEntity entity);
+						}
+						```
+
+						Port (Domain):
+						```java
+						public interface OrderRepository {
+							Order load(Long id);
+							void save(Order order);
+						}
+						```
+
+						<div class="fragment">&#128078;</div>
 
 						---
 
@@ -416,192 +432,26 @@
 
 						---
 
-						### Data persistence heuristics
+						<!-- .slide: class="rainbow hide-ticks"-->
+						## summary
+
+						* probably there is no silver bullet in architecture<!-- .element class="fragment"-->
+						* there is no silver bullet in persistence as well<!-- .element class="fragment"-->
+						* unfortunately, we need to do more work when setting up an architecture<!-- .element class="fragment"-->
+
+						--
+
+						### data persistence heuristics
 
 						![Heuristics](img/heuristics.png)
 
-						---
-
-						# backup
+						combine them, if needed &#8674; define bounded contexts<!-- .element: class="fragment"-->
 
 						---
 
-						## How did I do object persistence in 2001?<!-- .element class="pink"-->
+						# Q&A
 
-						--
-
-						```java[]
-						public abstract class AbstractEntity {
-							public Long id;
-
-							protected abstract void populateSelf(ResultSet rs);
-							protected abstract void loadSelf(Connection conn, long id);
-							protected void loadRelated
-								(Connection conn, long id, boolean withRelated) {};
-							public load(Connection conn, long id) {
-								loadSelf(conn, id);
-								if (withRelated) {
-									loadRelated(conn, id);
-								}
-							}
-							public write(Connection conn) {};
-							public delete(Connection conn) {};
-						}
-						```
-
-						--
-
-						### OrderLine entity
-						```java[|10-21|22-35]
-						public class OrderLineEntity extends AbstractEntity{
-							public String product;
-							public BigDecimal price;
-
-							protected void populateSelf(ResultSet rs) {
-								id = rs.getLong("ID");
-								product = rs.getString("PRODUCT");
-								price = rs.getBigDecimal("PRICE", 2);
-							}
-							protected void loadSelf(Connection conn, long id) {
-								ps = conn.prepareStatement(
-									"SELECT ID, PRODUCT, PRICE FROM LINES WHERE ID=?");
-								ps.setLong(1, id);
-								rs = ps.executeQuery();
-								if (rs.next()) {
-									populateSelf(rs);
-								} else {
-									throw new EntityNotFoundException(...);
-								}
-								// forgot to close ps and rs
-							}
-							public List loadAllForOrder(Connection conn, long orderId) {
-								ps = conn.prepareStatement(
-									"SELECT ID, PRODUCT, PRICE FROM LINES WHERE ORDER_ID=?");
-								ps.setLong(1, orderId);
-								rs = ps.executeQuery();
-								result = new ArrayList();
-								while (rs.next()) {
-									ol = new OrderLine();
-									ol.populateSelf(rs);
-									result.add(ol);
-								}
-								return result;
-								// again, forgot to close ps, rs
-							}
-						}
-						```
-
-						--
-
-						### Order entity
-						```java[|12-24|25-40|33-36|35]
-						public class OrderEntity extends AbstractEntity {
-							public Date creationDate;
-							public Date expirationDate;
-							public String customer;
-
-							protected void populateSelf(ResultSet rs) {
-								id = rs.getLong("ID");
-								creationDate = rs.getDate("CREATED");
-								expirationDate = rs.getDate("EXPIRE_AT");
-								customer = rs.getString("CUSTOMER");
-							}
-							protected void loadSelf(Connection conn, long id) {
-								ps = conn.prepareStatement(
-									"SELECT ID, CREATED, EXPIRE_AT, CUSTOMER FROM ORDERS " +
-									"WHERE ID=?");
-								ps.setLong(1, id);
-								rs = ps.executeQuery();
-								if (rs.next()) {
-									populateSelf(rs);
-								} else {
-									throw new EntityNotFoundException(...);
-								}
-								// forgot to close ps and rs
-							}
-							public List loadAllForCustomer(Connection conn, String customer) {
-								ps = conn.prepareStatement(
-									"SELECT ID, CREATED, EXPIRE_AT, CUSTOMER FROM ORDERS " +
-									"WHERE CUSTOMER=?");
-								ps.setString(1, customer);
-								rs = ps.executeQuery();
-								result = new ArrayList();
-								while (rs.next()) {
-									ol = new Order();
-									ol.populateSelf(rs);
-									ol.loadRelated(conn); // <-- !!!!
-									result.add(ol);
-								}
-								return result;
-								// again, forgot to close ps, rs
-							}
-						}
-						```
-
-						$N+1$ reads, like in 2022 with JPA<!-- .element class="fragment cyan"-->
-
-						---
-
-						## What is the problem with ORM?
-
-						--
-
-						### Leaking abstraction
-						```java[|1-2|4-5|10]
-						@Entity
-						@Table(name = "ORDERS")
-						public class Order {
-							@Id
-							@Generated
-							Long id;
-
-							String customer;
-
-							@OneToMany(mappedBy="order")
-							Set<OrderLine> orderLines;
-						}
-						```
-
-						Explicit dependency on javax.persistence<!-- .element class="fragment pink"-->
-
-						--
-
-						### Leaking abstraction
-						```java[|6]
-						orders = entityManager
-							.createQuery("from Order", Order.class)
-							.getResultList();
-
-						return orders.stream()
-							.map(order -> order.orderLines.price)
-							.collect(
-								Collectors.reducing(
-									BigDecimal.ZERO,
-									(left, right) -> left.add(right)));
-						```
-
-						"$N+1$ reads" problem<!-- .element class="fragment cyan"-->
-
-						`fetch join`<!-- .element class="fragment"-->
-
-						Yes, but this is supposed to be an abstraction, right?<!-- .element class="fragment pink"-->
-
-						--
-
-						### Leaking abstraction
-						```java[|5]
-						public List<Product> getAllProductsForOrder(Order order) {
-							List<Product> result = new ArrayList<>();
-							order.orderLines.forEach(line -> {
-								Product p = new Product();
-								line.product = p.productId;
-								result.add(p);
-							});
-							return result;
-						}
-						```
-
-						All product values in ORDER_LINES table are empty now!<!-- .element class="fragment cyan"-->
+						QR code to the presentation
 
 					</script>
 				</section>
