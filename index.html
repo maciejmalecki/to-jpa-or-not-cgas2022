@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>To JPA or not - revisited</title>
+		<title>To JPA or not</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
@@ -44,11 +44,13 @@
 
 						![Mentimeter QR](img/mentimeter_qr_code.png)
 
-						or https://www.menti.com, code: `7841 6880`
+						or https://www.menti.com, code: `4030 1599`
 
 						--
 
 						### Mentimeter #2
+
+						which bubble are you from?
 
 						---
 
@@ -76,11 +78,29 @@
 
 						--
 
-						### Mentimeter #3
+						why do we use software architecture?
+
+						ability to change the software in fast and safe way<!-- .element class="fragment cyan"-->
+
+						![orm](img/layers-deps.png)<!-- .element class="fragment"-->
+
+
+						--
+
+						how does the layered architecture work?
+
+						![orm](img/layers-abs.png)
+
+						--
+
+						### Mentimeter #4
+
+						name the architecture you use in your current project
 
 						--
 
 						<!-- .slide: class="rainbow"-->
+						how to fix layered architecture?<!-- .element class="cyan"-->
 
 						<div class="r-hstack gap-1">
 							<img src="img/typical-architecture.png" alt="typical architecture">
@@ -92,16 +112,30 @@
 							</ul>
 						</div>
 
+						--
+
+						problem solved?
+
+						![orm explained](img/layers-with-orm.png)
+
 						Who of you have ever consider not using ORM?<!-- .element: class="fragment"-->
 
 						--
 
-						### Mentimeter #4
+						### Mentimeter #5
+
+						what is the persistence tool you use the most?
+
+						--
+
+						### Mentimeter #6
+
+						what was the most exotic persistence tool you've ever used?
 
 						---
 
 						## history
-						### relational data bases
+						### relational data bases<!-- .element class="cyan"-->
 
 						* proposed by Codd in 1970
 						* backed with solid math theory
@@ -113,22 +147,26 @@
 						--
 
 						## history
-						### object oriented paradigm
+						### object oriented paradigm<!-- .element class="cyan"-->
 
 						* first language: Simula, 60ties
 						* Smalltalk 1970
 						* mid 80ties: Objective C, C++
-						* Pascal, ADA, BASIC, COBOL<!-- .element: class="fragment"-->
-						* 90ties - OOP became a dominant programming paradigm<!-- .element: class="fragment"-->
+						* Pascal, ADA, BASIC, COBOL
+						* 90ties - OOP became a dominant programming paradigm
 
 						--
 
 						# FACT
-						## OOP and RD does not fit
+						## OOP and RD does not fit<!-- .element class="pink"-->
 
 						--
 
-						#### Object relational impedance mismatch
+						![orm](img/orm.png)
+
+						--
+
+						#### object-relational impedance mismatch
 
 						![Ted](img/contrast.jpeg)
 
@@ -141,58 +179,18 @@
 						--
 
 						* Object to table mapping problem (i.e. inheritance, associations)
-						* The schema-ownership problem (DBA vs DEV)<!-- .element: class="fragment"-->
-						* The dual-schema problem<!-- .element: class="fragment"-->
-						* The data retrieval mechanism concern (HQL, JPQL, Query DSL, ...)<!-- .element: class="fragment"-->
-						* The partial-object problem and (NULLs)<!-- .element: class="fragment"-->
-						* ... load-time paradox ($N+1$)<!-- .element: class="fragment"-->
-						* Entity identity issues<!-- .element: class="fragment"-->
-						* Implicit updates<!-- .element: class="pink fragment"-->
+						* The schema-ownership problem (DBA vs DEV)
+						* The dual-schema problem
+						* The data retrieval mechanism concern (HQL, JPQL, Query DSL, ...)
+						* The partial-object problem and (NULLs)
+						* ... load-time paradox ($N+1$)
+						* Entity identity issues
+						* Implicit updates
 
 						--
 
-						#### Entity identity issues
+						### this abstraction leaks
 
-						```java[|3-5|7-9|11-13|18-20|24-26]
-						@Entity
-						public class Customer {
-							@Id
-							@Generated
-							Long id;
-
-							public boolean equals(Object other) {
-								return this.id == (Customer) other.id; // id == null???
-							}
-
-							public int hashCode() {
-								return id.hashCode(); // id == null???
-							}
-						}
-
-						...
-
-						customer = new Customer();
-						customerSet.add(customer);
-						entityManager.persist(customer);
-
-						...
-
-						public int hashCode() {
-							return 1;
-						}
-
-						```
-
-						--
-
-						### we fool ourselves
-
-						![orm](img/orm.png)
-
-						--
-
-						### ORM is a leaking abstraction!
-						
 						underlying persistence mechanism cannot be ignored<!-- .element class="cyan"-->
 
 						---
@@ -246,16 +244,6 @@
 
 						--
 
-						### how to map?
-
-						<!-- .slide: class="hide-ticks rainbow"-->
-						* manually
-						* or use Mapstruct, but...<!-- .element: class="fragment"-->
-						* don't overdose<!-- .element: class="fragment"-->
-						* and know when to stop<!-- .element: class="fragment"-->
-
-						--
-
 						### shared model
 
 						<!-- .slide: class="hide-ticks rainbow"-->
@@ -266,6 +254,68 @@
 						* no mappers
 						* BUT: tight coupling with tech<!-- .element: class="fragment" data-fragment-index="1"-->
 						* BUT: how about proxies?<!-- .element: class="fragment" data-fragment-index="1"-->
+
+						--
+
+						### shared vs separate models
+
+						when does it make sense to separate models?
+
+						Infrastructure:
+						```java
+						public interface SystemConfig {
+							String getProperty(String key)
+						}
+						```
+
+						Port (Domain):
+						```java
+						public interface DomainConfig {
+							boolean isDemo();
+							SystemType getSystemType();
+						}
+						```
+
+						<div class="fragment">&#128077;</div>
+
+						--
+
+						### when doesn't?
+
+						Infrastructure:
+						```java
+						public interface OrderJPARepository extends CrudRepository<OrderEntity, Long> {
+							Optional<OrderEntity> findById(Long id);
+							OrderEntity save(OrderEntity entity);
+						}
+						```
+
+						Port (Domain):
+						```java
+						public interface OrderRepository {
+							Order load(Long id);
+							void save(Order order);
+						}
+						```
+
+						<div class="fragment">&#128078;</div>
+
+						---
+
+						## safe JPA
+						(by Vlad Mihalcea)
+						<!-- .slide: class="rainbow"-->
+						![Vlad](img/vlad.jpg)
+
+						* use eager fetches only
+						* use keys instead of lazy assocs
+						* define your persistent entities boundaries
+
+						--
+
+						## consider using CQRS
+						* constructor expressions for reads, entities for writes
+						* use projections (CE) anytime you need to span across multiple aggregates
 
 						---
 
@@ -286,7 +336,7 @@
 
 						### JDBI: simple SELECTs
 
-						```java [|2|4|5|6-7]
+						```java []
 						public class UserRepository {
 						  private final Jdbi jdbi; // <-- inject somehow
 						  public List<User> findAllUsers() {
@@ -372,73 +422,20 @@
 
 						---
 
-						### shared vs separate models
+						## conclusion
 
-						when does it make sense to separate models?
+						simple SQL mappers are not silver bullets!
 
-						Infrastructure:
-						```java
-						public interface SystemConfig {
-							String getProperty(String key)
-						}
-						```
-
-						Port (Domain):
-						```java
-						public interface DomainConfig {
-							boolean isDemo();
-							SystemType getSystemType();
-						}
-						```
-
-						<div class="fragment">&#128077;</div>
+						https://github.com/hex-arch-training/hex-thai-star
 
 						--
 
-						### when doesn't?
-
-						Infrastructure:
-						```java
-						public interface OrderJPARepository extends CrudRepository<OrderEntity, Long> {
-							Optional<OrderEntity> findById(Long id);
-							OrderEntity save(OrderEntity entity);
-						}
-						```
-
-						Port (Domain):
-						```java
-						public interface OrderRepository {
-							Order load(Long id);
-							void save(Order order);
-						}
-						```
-
-						<div class="fragment">&#128078;</div>
-
-						---
-
-						## safe JPA
-						(by Vlad Mihalcea)
 						<!-- .slide: class="rainbow"-->
-						![Vlad](img/vlad.jpg)
+						## conclusion
 
-						* use eager fetches only
-						* use keys instead of lazy assocs
-						* define your persistent entities boundaries
-
-						--
-
-						## consider using CQRS
-						* constructor expressions for reads, entities for writes
-						* use projections (CE) anytime you need to span across multiple aggregates
-
-						---
-
-						<!-- .slide: class="rainbow hide-ticks"-->
-						## summary
-
-						* probably there is no silver bullet in architecture<!-- .element class="fragment"-->
-						* there is no silver bullet in persistence as well<!-- .element class="fragment"-->
+						* hexagonal architecture is not a silver bullet!
+						* layered architecture is not a silver bullet!<!-- .element class="fragment"-->
+						* the same for DevonFW<!-- .element class="fragment"-->
 						* unfortunately, we need to do more work when setting up an architecture<!-- .element class="fragment"-->
 
 						--
@@ -454,8 +451,6 @@
 						![qr](img/qr.png)
 
 						https://maciejmalecki.github.io/to-jpa-or-not-cgas2022/
-
-						### open discussion slot
 
 					</script>
 				</section>

@@ -199,6 +199,41 @@
 						```
 
 						All product values in ORDER_LINES table are empty now!<!-- .element class="fragment cyan"-->
+
+						---
+
+						#### Entity identity issues
+
+						```java[|3-5|7-9|11-13|18-20|24-26]
+						@Entity
+						public class Customer {
+							@Id
+							@Generated
+							Long id;
+
+							public boolean equals(Object other) {
+								return this.id == (Customer) other.id; // id == null???
+							}
+
+							public int hashCode() {
+								return id.hashCode(); // id == null???
+							}
+						}
+
+						...
+
+						customer = new Customer();
+						customerSet.add(customer);
+						entityManager.persist(customer);
+
+						...
+
+						public int hashCode() {
+							return 1;
+						}
+
+						```
+
 					</script>
 				</section>
 			</div>
