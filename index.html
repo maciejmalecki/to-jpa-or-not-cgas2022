@@ -71,14 +71,15 @@
 								<li>deadlines</li>
 								<li>hacking</li>
 								<li>lack of competence</li>
-								<li class="fragment pink" data-fragment-index="1">architecture should help but...</li>
+								<li>lack of architecture</li>	
+								<li class="fragment pink" data-fragment-index="1">architecture helps</li>
 							</ul>
 							<img src="img/layers.png" alt="layers" class="fragment" data-fragment-index="1">
 						</div>
 
 						--
 
-						why do we use software architecture?
+						software architecture - what for?
 
 						ability to change the software in fast and safe way<!-- .element class="fragment cyan"-->
 
@@ -88,6 +89,12 @@
 						--
 
 						how does the layered architecture work?
+
+						![orm](img/layers-prob.png)
+
+						--
+
+						how it is really?
 
 						![orm](img/layers-abs.png)
 
@@ -118,9 +125,9 @@
 
 						![orm explained](img/layers-with-orm.png)
 
-						Who of you have ever consider not using ORM?<!-- .element: class="fragment"-->
-
 						--
+
+						Who of you have ever consider not using ORM?<!-- .element class="cyan"-->
 
 						### Mentimeter #5
 
@@ -185,10 +192,11 @@
 						* The partial-object problem and (NULLs)
 						* ... load-time paradox ($N+1$)
 						* Entity identity issues
-						* Implicit updates
+						* Implicit updates<!-- .element class="cyan"-->
 
 						--
 
+						## ORM:
 						### this abstraction leaks
 
 						underlying persistence mechanism cannot be ignored<!-- .element class="cyan"-->
@@ -221,6 +229,20 @@
 						![Data port and adapter](img/data-port.png)<!-- .element: class="fragment" data-fragment-index="1"-->
 
 						*inversion of control<!-- .element: class="fragment cyan" data-fragment-index="1"-->
+
+						--
+
+						### example DB ports
+						```java
+						public interface FindBookingByTokenPort {
+							Optional<Booking> find(String token);
+						}
+						```
+						```java
+						public interface SaveBookingPort {
+							void save(Booking booking);
+						}
+						```
 
 						---
 
@@ -316,6 +338,11 @@
 						## consider using CQRS
 						* constructor expressions for reads, entities for writes
 						* use projections (CE) anytime you need to span across multiple aggregates
+
+						```sql
+						SELECT NEW example.EmployeeDetails(e.name, e.salary, e.department.name)
+						FROM Employee e
+						```
 
 						---
 
@@ -433,7 +460,9 @@
 						<!-- .slide: class="rainbow"-->
 						## conclusion
 
-						* hexagonal architecture is not a silver bullet!
+						there are no silver bullets in real life<!-- .element class="pink"-->
+
+						* hexagonal architecture is not a silver bullet!<!-- .element class="fragment"-->
 						* layered architecture is not a silver bullet!<!-- .element class="fragment"-->
 						* the same for DevonFW<!-- .element class="fragment"-->
 						* unfortunately, we need to do more work when setting up an architecture<!-- .element class="fragment"-->
